@@ -104,8 +104,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             return;
         }
         try {
-
-            return proxy.createVoucherOrder(voucherId);
+            proxy.createVoucherOrder(voucherOrder);
         } catch (IllegalStateException e) {
             throw new RuntimeException(e);
         } finally {
@@ -160,42 +159,35 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     /**
      * 创建秒杀订单
      *
-     * @param voucherId
+     * @param voucherOrder
      * @return
      */
     @Transactional
-    public Result createVoucherOrder(Long voucherId) {
+    public void createVoucherOrder(VoucherOrder voucherOrder) {
         //5. 一人一单
-        Long userId = UserHolder.getUser().getId();
+        Long userId = voucherOrder.getUserId();
         //5.1 查询订单
-        int count = query().eq("user_id", userId).eq("voucher_id", voucherId).count();
+        int count = query().eq("user_id", userId).eq("voucher_id", voucherOrder.getVoucherId()).count();
         //5.2 判断是否存在
         if (count > 0) {
             // 表示该用户已经买过一次优惠券了
-            return Result.fail("用户已经购买过一次了！");
+            log.error("用户已经购买过一次了！");
+            return;
         }
         //6. 扣减库存
         boolean success = seckillVoucherService.update()
                 .setSql("stock = stock - 1") //set stock = stock -1
-                .eq("voucher_id", voucherId)
+                .eq("voucher_id", voucherOrder.getVoucherId())
                 .gt("stock", 0) // where id = ? and stock > 0
                 .update();
         if (!success) {
             // 扣减失败
-            return Result.fail("库存不足");
+            log.error("库存不足!");
+            return;
         }
         //7. 创建订单
-        //7.1 订单id
-        long orderId = redisIdWorker.nextId("order");
-
-        VoucherOrder voucherOrder = VoucherOrder.builder()
-                .id(orderId)
-                .userId(userId)
-                .voucherId(voucherId)
-                .build();
         save(voucherOrder);
-        //8. 返回订单id
-        return Result.ok(voucherId);
+
     }
 
 //    public Result seckillVoucher(Long voucherId) {
