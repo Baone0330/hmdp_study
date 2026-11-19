@@ -160,7 +160,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * @return
      */
     @Override
-    public Result csignCountount() {
+    public Result signCount() {
         // 1. 获取当前登录用户
         Long userId = UserHolder.getUser().getId();
         // 2. 获取日期

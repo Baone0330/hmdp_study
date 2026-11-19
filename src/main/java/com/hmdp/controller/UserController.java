@@ -127,7 +127,7 @@ public class UserController {
      */
     @GetMapping("/sign/count")
     public Result signCount() {
-        return userService.csignCountount();
+        return userService.signCount();
     }
 
 }

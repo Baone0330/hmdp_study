@@ -47,5 +47,5 @@ public interface IUserService extends IService<User> {
      *
      * @return
      */
-    Result csignCountount();
+    Result signCount();
 }
